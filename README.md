@@ -22,6 +22,9 @@ See [`Q2_Sustainability_Map_Proposal.md`](./Q2_Sustainability_Map_Proposal.md) f
 ├── Q2_Sustainability_Map_Proposal.md   # Q2 written proposal
 └── README.md
 ```
+## Live URL
+
+https://binnyyash.github.io/Sustainibility-cell-web-assignment/
 
 ## Additional notes about my implementation
 
