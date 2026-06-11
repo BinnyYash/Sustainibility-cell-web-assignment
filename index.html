@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sustainability Cell · IIT Bombay</title>
+  <style>
+   @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;800&display=swap');
+#globe { filter: drop-shadow(0 0 50px rgba(124, 193, 232, 0.4)); }
+.hero-text > * { opacity: 0; transform: translateY(20px); animation: rise 0.7s ease forwards; }
+.hero-text > *:nth-child(1) { animation-delay: 0.1s; }
+.hero-text > *:nth-child(2) { animation-delay: 0.25s; }
+.hero-text > *:nth-child(3) { animation-delay: 0.4s; }
+.hero-text > *:nth-child(4) { animation-delay: 0.55s; }
+@keyframes rise { to { opacity: 1; transform: translateY(0); } }
+/* variables: define theme colours once, reuse everywhere (like #define / const) */
+:root {
+  --bg-top: #1c5a63;
+  --bg-bottom: #0a2a3a;
+  --green: #8BC63F;
+  --white: #ffffff;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  font-family: 'Poppins', sans-serif;
+  color: var(--white);
+  background: linear-gradient(135deg, var(--bg-top), var(--bg-bottom));
+  min-height: 100vh;
+}
+
+/* nav: a horizontal row — logo pushed left, links right */
+nav {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 24px 50px;
+}
+nav .brand { font-weight: 600; }
+.brand { display: flex; align-items: center; gap: 12px; }
+.logo {
+  height: 44px;
+  width: auto;
+  animation: logo-glow 2.5s ease-in-out infinite;
+}
+@keyframes logo-glow {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(-4px); }
+}
+nav ul { display: flex; gap: 30px; list-style: none; }
+nav a { color: var(--white); text-decoration: none; }
+nav a:hover { color: var(--green); }     /* hover interaction */
+
+
+/* hero: text left, globe right */
+main {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 60px 50px;
+  gap: 40px;
+}
+.hero-text { max-width: 500px; }
+h1 { font-size: 3.5rem; line-height: 1.1; }
+.accent { color: var(--green); display: block; }
+.hero-text p { margin: 20px 0; font-size: 1.1rem; opacity: 0.85; }
+
+/* the green button */
+.btn {
+  display: inline-block;
+  background: var(--green);
+  color: var(--bg-bottom);
+  padding: 14px 30px;
+  border-radius: 8px;
+  text-decoration: none;
+  font-weight: 600;
+  transition: transform 0.2s;            /* smooth lift on hover */
+}
+.btn:hover { transform: translateY(-3px); }
+  </style>
+</head>
+<body>
+  <nav>
+    <div class="brand">
+      <img src="logo.png" alt="Sustainability Cell logo" class="logo">
+      <span>Sustainability Cell</span>
+    </div>
+    <ul>
+      <li><a href="#">About</a></li>
+      <li><a href="#">Events</a></li>
+      <li><a href="#">Implementations</a></li>
+      <li><a href="#">Contact</a></li>
+      <li><a href="#">Green Score</a></li>
+    </ul>
+  </nav>
+
+  <main>
+    <div class="hero-text">
+      <h1>Sustainability Cell <span class="accent">IIT Bombay</span></h1>
+      <p>Empowering sustainable practices through innovation, education, and action.</p>
+      <a href="#" class="btn">Learn More</a>
+    </div>
+    <canvas id="globe" width="600" height="600"></canvas>
+  </main>
+
+  <script src="land.js"></script>
+  <script>
+    // grab the canvas and its 2D drawing context
+    const canvas = document.getElementById('globe');
+    const ctx = canvas.getContext('2d');
+    const R = 250;
+    const cx = canvas.width / 2;
+    const cy = canvas.height / 2;
+
+    // latitude/longitude -> a point on the sphere
+    function latLngToXYZ(lat, lng) {
+      const phi   = (90 - lat) * Math.PI / 180;
+      const theta = (lng + 180) * Math.PI / 180;
+      return {
+        x: -Math.sin(phi) * Math.cos(theta),
+        y:  Math.cos(phi),
+        z:  Math.sin(phi) * Math.sin(theta)
+      };
+    }
+
+    // build land points once from the LAND dataset
+    const landPoints = [];
+    for (let k = 0; k < LAND.length; k += 2) {
+      landPoints.push(latLngToXYZ(LAND[k], LAND[k + 1]));
+    }
+
+    // animation state
+    let angle = 0;
+    const tilt = 23.5 * Math.PI / 180;   // Earth's axial tilt, in radians
+    let speed = 0.005;
+    // --- Satellites orbiting the Earth ---
+const satellites = [];
+for (let i = 0; i < 3; i++) {
+  satellites.push({
+    radius: R * (1.22 + i * 0.10),        // how far above Earth's surface
+    incl:   (Math.random() - 0.5) * 1.4,  // tilt of the orbital plane
+    node:   Math.random() * Math.PI * 2,  // rotation of the plane around y
+    phase:  Math.random() * Math.PI * 2,  // current position in the orbit
+    speed:  0.010 + Math.random() * 0.006
+  });
+}
+
+// 3D position of a satellite at a given phase, projected to screen
+function satScreen(s, phase) {
+  let x = Math.cos(phase), y = 0, z = Math.sin(phase);
+  // orbital plane tilt (rotate around x)
+  let y1 = y * Math.cos(s.incl) - z * Math.sin(s.incl);
+  let z1 = y * Math.sin(s.incl) + z * Math.cos(s.incl);
+  y = y1; z = z1;
+  // rotate the plane around y
+  let x1 = x * Math.cos(s.node) - z * Math.sin(s.node);
+  let z2 = x * Math.sin(s.node) + z * Math.cos(s.node);
+  x = x1; z = z2;
+  // Earth's axial tilt — same screen-plane rotation as the continents
+  const xf = x * Math.cos(tilt) - y * Math.sin(tilt);
+  const yf = x * Math.sin(tilt) + y * Math.cos(tilt);
+  return {
+    sx: cx + xf * s.radius,
+    sy: cy + yf * s.radius,
+    z,
+    projR: Math.hypot(xf, yf) * s.radius   // distance from globe centre on screen
+  };
+}
+    function draw() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      // ocean: a shaded blue ball
+      const ocean = ctx.createRadialGradient(cx - R*0.3, cy - R*0.3, R*0.1, cx, cy, R);
+      ocean.addColorStop(0, '#7cc1e8');
+      ocean.addColorStop(1, '#123f63');
+      ctx.globalAlpha = 1;
+      ctx.fillStyle = ocean;
+      ctx.beginPath();
+      ctx.arc(cx, cy, R, 0, Math.PI * 2);
+      ctx.fill();
+
+      // continents: green dots facing us
+      for (const p of landPoints) {
+        // spin around the polar (y) axis
+    const xs = p.x * Math.cos(angle) - p.z * Math.sin(angle);
+    const z  = p.x * Math.sin(angle) + p.z * Math.cos(angle);
+    const ys = p.y;
+    if (z < 0) continue;
+
+    // tilt the axis 23.5° (lean it in the screen plane)
+    const x = xs * Math.cos(tilt) - ys * Math.sin(tilt);
+    const y = xs * Math.sin(tilt) + ys * Math.cos(tilt);
+
+    const screenX = cx + x * R;
+    const screenY = cy + y * R;
+        ctx.globalAlpha = 0.5 + z * 0.5;
+        ctx.fillStyle = '#8BC63F';
+        ctx.beginPath();
+        ctx.arc(screenX, screenY, 1.8, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      // satellites with short trails
+for (const s of satellites) {
+  s.phase += s.speed;
+
+  // trail: a few faded dots behind the satellite
+  for (let t = 6; t > 0; t--) {
+    const p = satScreen(s, s.phase - t * 0.04);
+    if (p.z < 0 && p.projR < R) continue;          // hidden behind globe
+    ctx.globalAlpha = 0.18 - t * 0.025;
+    ctx.fillStyle = '#ffffff';
+    ctx.beginPath();
+    ctx.arc(p.sx, p.sy, 1.6, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  // the satellite itself
+  const p = satScreen(s, s.phase);
+  if (p.z < 0 && p.projR < R) continue;
+  ctx.globalAlpha = p.z > 0 ? 1 : 0.55;
+  ctx.fillStyle = '#ffffff';
+  ctx.beginPath();
+  ctx.arc(p.sx, p.sy, 2.4, 0, Math.PI * 2);
+  ctx.fill();
+}
+      ctx.globalAlpha = 1;
+
+      angle += speed;
+      speed += (0.005 - speed) * 0.02;   // ease back to idle
+      requestAnimationFrame(draw);
+    }
+
+    draw();
+
+    // tap/click to speed up — taps stack, then it eases back
+    canvas.addEventListener('click', () => {
+      speed = Math.min(speed + 0.02, 0.15);
+    });
+  </script>
