@@ -10,7 +10,7 @@ A redesigned hero that keeps the existing theme of the current website but repla
 
 ## Q2. Campus Sustainability Map
 
-See [`Q2_Sustainability_Map_Proposal.md`](./Q2_Sustainability_Map_Proposal.md) for the written proposal.
+See [`Q2_Sustainability_Map_Proposal.md`](./Q2_Sustainability_Map_Proposal.md) for Question 2
 
 ## Files
 
